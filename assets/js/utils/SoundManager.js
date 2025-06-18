@@ -18,8 +18,7 @@ export class SoundManager {
         console.log("Audio Context Unlocked.");
     }
 
-    // We change this to return the promise
-    loadSounds() {
+    async loadSounds() {
         console.log("Loading sounds...");
         const soundPromises = Object.entries(this.soundConfig).map(([name, config]) => {
             return new Promise((resolve, reject) => {
@@ -33,14 +32,16 @@ export class SoundManager {
             });
         });
 
-        // Return the main promise so other parts of the app can wait
-        return Promise.all(soundPromises)
-            .then(() => console.log("All sounds loaded successfully."))
-            .catch(error => console.error(error));
+        try {
+            await Promise.all(soundPromises);
+            console.log("All sounds loaded successfully.");
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     play(name) {
-        if (!this.sounds[name] || this.isMuted || !this.audioContextUnlocked) return;
+        if (!this.sounds[name] || this.isMuted) return;
 
         // For short sounds that can be played in quick succession (like hovers)
         // we reset the time to allow for overlapping plays.

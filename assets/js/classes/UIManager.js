@@ -1,9 +1,9 @@
-
 import { UIElements, INITIAL_HP } from './config/gameConfig.js';
 
 export class UIManager {
-    constructor() {
+    constructor(soundManager) {
         this.elements = UIElements;
+        this.soundManager = soundManager;
         this.tooltipTimeout = null;
     }
 
@@ -99,7 +99,10 @@ export class UIManager {
         for (let i = 0; i < 3; i++) {
             const pileEl = document.createElement('div');
             pileEl.className = 'pile';
-            pileEl.onclick = () => callback(i);
+            pileEl.onclick = () => {
+                this.soundManager.play('ui_click');
+                callback(i);
+            };
             this.elements.pileSelectionContainer.appendChild(pileEl);
         }
         this.elements.pileSelectionScreen.style.display = 'flex';
@@ -112,6 +115,7 @@ export class UIManager {
             const button = document.createElement('button');
             button.textContent = option > 0 ? `+${option}` : option;
             button.onclick = () => {
+                this.soundManager.play('ui_click');
                 this.elements.flexibleCardModal.style.display = 'none';
                 callback(option);
             };
@@ -126,6 +130,7 @@ export class UIManager {
             
             const cardData = handler.getCardData(index); // Assumes handler can provide card data
             cardEl.addEventListener('mouseenter', e => {
+                this.soundManager.play('card_hover');
                 clearTimeout(this.tooltipTimeout);
                 this.elements.cardTooltip.textContent = cardData.name;
                 this.elements.cardTooltip.style.left = `${e.clientX + 15}px`;
