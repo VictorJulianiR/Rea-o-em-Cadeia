@@ -1,191 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reação em Cadeia - Card Game Químico</title>
+    <title>Chain Reaction - Ultimate Chemistry Card Game</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
-        :root{--bg-color:#1a1a2e;--player-color:#16213e;--opponent-color:#533483;--reaction-color:#e94560;--card-bg:#f0f0f0;--card-border:#333;--text-light:#f1f1f1;--text-dark:#111;--damage-color:#ff4757;--stable-color:#2ed573;--hyper-instability-color:#f9ca24;--superheavy-instability-color:#ff6b81}body{font-family:'Roboto Mono',monospace;background-color:var(--bg-color);color:var(--text-light);margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden}#game-container{width:100%;max-width:1200px;height:95vh;display:grid;grid-template-rows:1fr 2fr 1fr;grid-template-columns:3fr 1fr;gap:10px;padding:10px;box-sizing:border-box}.player-area{border-radius:10px;padding:15px;display:flex;flex-direction:column;position:relative}#opponent-area{background-color:var(--opponent-color);grid-row:1 / 2;grid-column:1 / 2}#player-area{background-color:var(--player-color);grid-row:3 / 4;grid-column:1 / 2}#reaction-area{background-color:rgba(0,0,0,0.2);border:2px dashed var(--reaction-color);grid-row:2 / 3;grid-column:1 / 2;border-radius:10px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:border-color .3s,box-shadow .3s}#reaction-area.hyper-unstable{border-color:var(--hyper-instability-color);animation:pulse-yellow 1s infinite}#reaction-area.superheavy-unstable{border-color:var(--superheavy-instability-color);animation:pulse-red 1s infinite}@keyframes pulse-yellow{0%{box-shadow:0 0 0 0 var(--hyper-instability-color)}70%{box-shadow:0 0 10px 15px rgba(249,202,36,0)}100%{box-shadow:0 0 0 0 rgba(249,202,36,0)}}@keyframes pulse-red{0%{box-shadow:0 0 0 0 var(--superheavy-instability-color)}70%{box-shadow:0 0 10px 15px rgba(255,107,129,0)}100%{box-shadow:0 0 0 0 rgba(255,107,129,0)}}#game-info{background-color:#0f3460;grid-row:1 / 4;grid-column:2 / 3;border-radius:10px;padding:15px;display:flex;flex-direction:column}.hand{display:flex;gap:10px;justify-content:center;align-items:center;flex-grow:1}
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;700&display=swap');
         
-        /* --- ALTERAÇÃO CSS: Aumento do tamanho da carta --- */
-        .card {
-            width: 115px; /* De 100px para 115px */
-            height: 160px; /* De 140px para 160px */
-            background-color: var(--card-bg);
-            border: 2px solid var(--card-border);
-            border-radius: 8px;
-            color: var(--text-dark);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 8px;
-            box-sizing: border-box;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
-            box-shadow: 3px 3px 5px rgba(0,0,0,0.3);
-        }
-        #player-hand .card:hover{transform:translateY(-15px) scale(1.05)}.card.card-back{background-color:#555;background-image:radial-gradient(circle,#777,#555);cursor:default}
-        
-        /* --- ALTERAÇÃO CSS: Layout do cabeçalho mais robusto --- */
-        .card-header{
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start; /* Alinha no topo para o caso de o texto quebrar a linha */
-            gap: 5px; /* Adiciona um pequeno espaçamento */
-        }
-        .card-name{
-            font-weight: 700;
-            font-size: 13px; /* Levemente reduzido para ajudar */
-            flex-grow: 1; /* Permite que o nome ocupe o espaço disponível */
-            word-break: break-word; /* Quebra palavras longas se necessário */
-        }
-        .card-z{
-            font-family:'Orbitron',sans-serif;
-            font-size: 12px;
-            background: #ddd;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-shrink: 0; /* Impede que o 'Z' seja espremido */
-        }
-        
-        .card-symbol{font-family:'Orbitron',sans-serif;font-size:40px;text-align:center;flex-grow:1;display:flex;justify-content:center;align-items:center}.card-charge{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;text-align:right}.charge-positive{color:#d63031}.charge-negative{color:#0984e3}.charge-neutral{color:#636e72}.player-hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.player-name{font-size:18px;font-weight:700}.hp-bar{width:150px;height:20px;background-color:#555;border-radius:10px;overflow:hidden;border:1px solid var(--text-light)}.hp-fill{height:100%;background-color:var(--stable-color);transition:width .5s ease}.deck-info{display:flex;align-items:center;gap:5px}#reaction-compound{display:flex;gap:5px;margin-bottom:15px;min-height:150px}
-        
-        /* --- ALTERAÇÃO CSS: Ajuste das cartas menores na área de reação --- */
-        #reaction-compound .card{
-            width: 92px;  /* 80% do novo tamanho */
-            height: 128px; /* 80% do novo tamanho */
-            cursor:default
+        :root {
+            --neon-blue: #00f5ff; --neon-purple: #8a2be2; --neon-green: #39ff14; --neon-red: #ff073a; --neon-yellow: #ffff00;
+            --dark-bg: #0a0a0f; --card-bg: linear-gradient(145deg, #1a1a2e, #16213e); --glass-bg: rgba(26, 33, 62, 0.25);
+            --text-light: #f0f0f0; --text-glow: 0 0 5px rgba(255,255,255,0.7);
         }
 
-        #reaction-info{text-align:center}#reaction-text{font-size:18px;margin-bottom:10px}#reaction-stats-container{display:flex;justify-content:center;align-items:flex-start;gap:40px}.stat-block{text-align:center}.stat-label{font-size:14px;color:#ccc;display:block}.stat-value{font-family:'Orbitron',sans-serif;font-size:48px;font-weight:700}#game-log{flex-grow:1;background-color:rgba(0,0,0,0.3);border-radius:5px;padding:10px;overflow-y:auto;display:flex;flex-direction:column-reverse}#game-log p{margin:2px 0;font-size:12px;border-bottom:1px solid #444;padding-bottom:2px}.modal{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.8);display:flex;justify-content:center;align-items:center;z-index:100;flex-direction:column;color:var(--text-light);text-align:center}.modal-content{background:var(--player-color);padding:30px;border-radius:15px;border:2px solid var(--text-light)}.modal h2{margin-top:0}.modal button{font-family:'Roboto Mono',monospace;font-size:18px;padding:10px 20px;background:var(--reaction-color);border:none;color:var(--text-light);border-radius:5px;cursor:pointer;margin-top:20px}#pile-selection .pile{width:100px;height:140px;background-color:#555;border:2px solid var(--text-light);border-radius:8px;display:inline-block;margin:10px;cursor:pointer;transition:transform .2s}#pile-selection .pile:hover{transform:scale(1.1)}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Orbitron', monospace; background: var(--dark-bg); color: var(--text-light);
+            overflow: hidden; height: 100vh; position: relative;
+        }
+
+        .background-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: linear-gradient(45deg, #0a0a0f, #1a1a2e, #16213e, #533483);
+            background-size: 400% 400%; animation: gradientShift 15s ease infinite;
+        }
+
+        .particles { position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: -1; }
+
+        .particle {
+            position: absolute; background: var(--neon-blue); border-radius: 50%;
+            animation: float 10s infinite linear; opacity: 0; box-shadow: 0 0 10px currentColor;
+        }
+
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10%, 90% { opacity: 0.3; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        #game-container {
+            width: 100vw; height: 100vh; display: grid; grid-template-rows: 1fr 2fr 1fr;
+            grid-template-columns: 4fr 1.2fr; gap: 20px; padding: 20px; position: relative;
+        }
+
+        .player-area {
+            background: var(--glass-bg); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 20px; position: relative; transition: all 0.4s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-area.active {
+            border-color: var(--neon-blue); box-shadow: 0 0 25px rgba(0, 245, 255, 0.4), inset 0 0 15px rgba(0, 245, 255, 0.2);
+        }
+
+        #opponent-area { grid-row: 1; grid-column: 1; }
+        #player-area { grid-row: 3; grid-column: 1; }
+
+        #reaction-area {
+            grid-row: 2; grid-column: 1; background: var(--glass-bg); backdrop-filter: blur(15px);
+            border: 3px dashed var(--neon-purple); border-radius: 25px; padding: 20px; display: flex;
+            flex-direction: column; align-items: center; justify-content: center; position: relative;
+            transition: all 0.3s ease; box-shadow: inset 0 0 40px rgba(138, 43, 226, 0.2);
+        }
+        #reaction-area.hyper-unstable { border-color: var(--neon-yellow); animation: dangerPulse 0.5s infinite; box-shadow: 0 0 50px var(--neon-yellow); }
+        #reaction-area.superheavy-unstable { border-color: var(--neon-red); animation: criticalPulse 0.3s infinite; box-shadow: 0 0 60px var(--neon-red); }
+
+        @keyframes dangerPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        @keyframes criticalPulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.5); } }
+
+        .card {
+            width: 130px; height: 185px; background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px; color: var(--text-light); display: flex; flex-direction: column;
+            justify-content: space-between; padding: 12px; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+        .card:hover::before { left: 100%; }
+
+        #player-hand .card:hover {
+            transform: translateY(-20px) scale(1.1); box-shadow: 0 20px 40px rgba(0, 245, 255, 0.2);
+            border-color: var(--neon-blue); z-index: 10;
+        }
+
+        .card.card-back {
+            background: linear-gradient(145deg, #2a2a3e, #1a1a2e); border-color: var(--neon-purple); cursor: default;
+        }
+        .card.card-back::after {
+            content: '⚛️'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 50px; animation: spin 4s linear infinite; text-shadow: 0 0 20px var(--neon-purple);
+        }
+        @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .card-name { font-weight: 700; font-size: 13px; flex-grow: 1; text-shadow: var(--text-glow); }
+        .card-z {
+            font-size: 14px; background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center;
+            align-items: center; flex-shrink: 0; font-weight: 900; box-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
+        }
+
+        .card-symbol {
+            font-size: 44px; text-align: center; flex-grow: 1; display: flex; justify-content: center; align-items: center;
+            font-weight: 900; animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow { from { text-shadow: 0 0 15px currentColor; } to { text-shadow: 0 0 25px currentColor, 0 0 35px currentColor; } }
+
+        .card-charge { font-size: 26px; font-weight: 900; text-align: right; text-shadow: var(--text-glow); }
+
+        .charge-positive { color: var(--neon-red); }
+        .charge-negative { color: var(--neon-blue); }
+        .charge-neutral { color: var(--neon-green); }
+
+        .hand { display: flex; gap: 15px; justify-content: center; align-items: center; flex-grow: 1; perspective: 1000px; }
+
+        .player-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position:relative; }
+        .player-name { font-size: 22px; font-weight: 700; text-shadow: var(--text-glow); }
+        .hp-bar { width: 200px; height: 25px; background: rgba(0, 0, 0, 0.5); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, var(--neon-red), var(--neon-yellow), var(--neon-green)); transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); background-size: 200%; }
+        .hp-text { font-weight: 700; font-size: 16px; text-shadow: var(--text-glow); }
+
+        #reaction-compound {
+            display: flex; gap: 10px; margin-bottom: 20px; min-height: 185px;
+            align-items: center; justify-content: center; flex-wrap: wrap;
+        }
+        #reaction-compound .card {
+            width: 110px; height: 155px; cursor: default;
+        }
+        /* BUG FIX: Animation is now in its own class, applied only to new cards */
+        #reaction-compound .card.animate-in {
+            animation: cardAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes cardAppear { 0% { transform: scale(0) rotate(90deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+        #reaction-info { text-align: center; }
+        #reaction-text { font-size: 22px; margin-bottom: 15px; font-weight: 700; text-shadow: var(--text-glow); }
+        #reaction-stats-container { display: flex; justify-content: center; align-items: flex-start; gap: 60px; }
+        .stat-block { text-align: center; }
+        .stat-label { font-size: 16px; color: rgba(255, 255, 255, 0.7); display: block; margin-bottom: 5px; }
+        .stat-value { font-size: 54px; font-weight: 900; text-shadow: 0 0 25px currentColor; animation: statPulse 2s ease-in-out infinite alternate; }
+        @keyframes statPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        #game-info {
+            grid-row: 1 / 4; grid-column: 2; background: var(--glass-bg); backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px;
+            display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        #game-info h2 {
+            font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        #turn-indicator {
+            text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 16px; padding: 12px;
+            background: rgba(0, 0, 0, 0.3); border-radius: 10px; border: 1px solid var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue); transition: all 0.3s;
+        }
+        #game-log {
+            flex-grow: 1; background: rgba(0, 0, 0, 0.2); border-radius: 15px; padding: 15px;
+            overflow-y: auto; display: flex; flex-direction: column-reverse;
+            border: 1px solid rgba(255, 255, 255, 0.1); font-family: 'Roboto Mono', monospace;
+        }
+        #game-log p { margin: 4px 0; font-size: 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; animation: logEntry 0.5s ease-out; }
+        @keyframes logEntry { 0% { opacity: 0; transform: translateX(-15px); } 100% { opacity: 1; transform: translateX(0); } }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; flex-direction: column; color: var(--text-light); text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-content {
+            background: var(--glass-bg); backdrop-filter: blur(20px); padding: 40px; border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 600px; animation: modalAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes modalAppear { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        .modal h2 {
+            margin-bottom: 25px; font-size: 32px; font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .modal p { margin-bottom: 15px; font-size: 16px; line-height: 1.6; font-family: 'Roboto Mono', monospace;}
+        .modal button {
+            font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 700; padding: 15px 30px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple)); border: none;
+            color: var(--text-light); border-radius: 15px; cursor: pointer; margin-top: 20px;
+            transition: all 0.3s ease; box-shadow: 0 5px 20px rgba(0, 245, 255, 0.2);
+        }
+        .modal button:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 30px rgba(0, 245, 255, 0.4); }
+
+        #pile-selection { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
+        .pile {
+            width: 120px; height: 170px; background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
+            border: 3px solid var(--neon-purple); border-radius: 15px; display: flex; justify-content: center;
+            align-items: center; cursor: pointer; transition: all 0.3s ease; font-size: 48px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .pile:hover { transform: translateY(-10px) scale(1.1); border-color: var(--neon-blue); box-shadow: 0 15px 30px rgba(0, 245, 255, 0.3); }
+        .pile::after { content: '🃏'; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .deck-info {
+            position: absolute; bottom: 15px; right: 20px; background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 700; font-size: 14px;
+        }
+        
+        .explosion {
+            position: absolute; width: 50px; height: 50px; border-radius: 50%;
+            background: var(--neon-red); animation: explode 0.6s ease-out forwards;
+            pointer-events: none; z-index: 50; box-shadow: 0 0 20px var(--neon-red), 0 0 40px var(--neon-red);
+        }
+        @keyframes explode { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(8); opacity: 0; } }
+
+        #card-tooltip {
+            position: fixed; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); color: white;
+            padding: 8px 12px; border-radius: 8px; font-size: 14px; pointer-events: none;
+            z-index: 200; opacity: 0; transition: opacity 0.2s; white-space: nowrap;
+            border: 1px solid var(--neon-blue);
+        }
     </style>
 </head>
 <body>
+    <div class="background-animation"></div>
+    <div class="particles" id="particles-js"></div>
 
     <div id="game-container" style="display: none;">
-        <div id="opponent-area" class="player-area"><div class="player-hud"><span id="opponent-name" class="player-name">IA Quimista</span><div class="hp-bar"><div id="opponent-hp-fill" class="hp-fill"></div></div><span id="opponent-hp-text">100/100</span></div><div id="opponent-hand" class="hand"></div><div class="deck-info" style="position: absolute; bottom: 10px; right: 10px;"><span>Deck: </span><span id="opponent-deck-count">0</span></div></div>
-        <div id="reaction-area"><div id="reaction-compound"></div><div id="reaction-info"><div id="reaction-text">Composto Instável</div><div id="reaction-stats-container"><div class="stat-block"><span class="stat-label">Carga</span><div id="reaction-charge" class="stat-value">0</div></div><div class="stat-block"><span class="stat-label">Massa (Z)</span><div id="reaction-mass" class="stat-value">0</div></div></div></div></div>
-        <div id="player-area" class="player-area"><div id="player-hand" class="hand"></div><div class="player-hud" style="margin-top: 10px;"><span id="player-name" class="player-name">Jogador</span><div class="hp-bar"><div id="player-hp-fill" class="hp-fill"></div></div><span id="player-hp-text">100/100</span></div><div class="deck-info" style="position: absolute; top: 10px; right: 10px;"><span>Deck: </span><span id="player-deck-count">0</span></div></div>
-        <div id="game-info"><h2>Reação em Cadeia</h2><div id="turn-indicator" style="text-align: center; margin-bottom: 10px; font-weight: bold;"></div><div id="game-log"></div></div>
+        <div id="opponent-area" class="player-area">
+            <div class="player-hud">
+                <span id="opponent-name" class="player-name">🤖 AI Quimista</span>
+                <div class="hp-bar"><div id="opponent-hp-fill" class="hp-fill"></div></div>
+                <span id="opponent-hp-text" class="hp-text">100/100</span>
+            </div>
+            <div id="opponent-hand" class="hand"></div>
+            <div class="deck-info"><span>⚗️ Deck: </span><span id="opponent-deck-count">0</span></div>
+        </div>
+
+        <div id="reaction-area">
+            <div id="reaction-compound"></div>
+            <div id="reaction-info">
+                <div id="reaction-text">⚛️ Composto Instável</div>
+                <div id="reaction-stats-container">
+                    <div class="stat-block"><span class="stat-label">⚡ Carga</span><div id="reaction-charge" class="stat-value">0</div></div>
+                    <div class="stat-block"><span class="stat-label">🔬 Massa (Z)</span><div id="reaction-mass" class="stat-value">0</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="player-area" class="player-area">
+            <div id="player-hand" class="hand"></div>
+            <div class="player-hud" style="margin-top: 15px;">
+                <span id="player-name" class="player-name">🧪 Jogador</span>
+                <div class="hp-bar"><div id="player-hp-fill" class="hp-fill"></div></div>
+                <span id="player-hp-text" class="hp-text">100/100</span>
+            </div>
+            <div class="deck-info"><span>⚗️ Deck: </span><span id="player-deck-count">0</span></div>
+        </div>
+
+        <div id="game-info">
+            <h2>⚛️ Chain Reaction ⚛️</h2>
+            <div id="turn-indicator">Aguardando início...</div>
+            <div id="game-log"></div>
+        </div>
     </div>
     
     <div id="start-screen" class="modal">
         <div class="modal-content">
-            <h2>Bem-vindo ao Reação em Cadeia!</h2>
-            <p>Após uma reação explodir ou ser estabilizada, o jogador que <strong>não</strong> sofreu dano ganha a iniciativa para começar a próxima reação.</p>
-            <p style="color: var(--hyper-instability-color); font-weight: bold;">CUIDADO (CARGA): Se a carga passar de +6 ou -6, explode em você!</p>
-            <p style="color: var(--superheavy-instability-color); font-weight: bold;">CUIDADO (MASSA): Se a massa (Z) passar de 82, explode em você!</p>
-            <button id="start-game-btn">Iniciar Jogo</button>
+            <h2>🧬 Bem-vindo ao Chain Reaction! 🧬</h2>
+            <p>Combine elementos para criar reações. Zere a estabilidade do oponente para vencer!</p>
+            <p style="color: var(--neon-yellow); font-weight: bold;">⚠️ CARGA > ±6: Reação explode em você!</p>
+            <p style="color: var(--neon-red); font-weight: bold;">💥 MASSA > 82: Reação explode em você!</p>
+            <p style="color: var(--neon-green); font-weight: bold;">✅ CARGA = 0: Molécula estável, dano no oponente!</p>
+            <button id="start-game-btn">🚀 Iniciar Batalha Química</button>
         </div>
     </div>
     
-    <div id="pile-selection-screen" class="modal" style="display: none;"><div class="modal-content"><h2>Seu oponente dividiu o deck dele.</h2><p>Escolha uma pilha para adicionar ao seu deck.</p><div id="pile-selection"><div class="pile" onclick="selectPile(0)"></div><div class="pile" onclick="selectPile(1)"></div><div class="pile" onclick="selectPile(2)"></div></div></div></div>
-    <div id="game-over-screen" class="modal" style="display: none;"><div class="modal-content"><h2 id="game-over-message"></h2><button id="restart-game-btn">Jogar Novamente</button></div></div>
-<script>
-const CARD_DATABASE = {'H':{name:'Hidrogênio',symbol:'H',z:1,charge:1},'Na':{name:'Sódio',symbol:'Na⁺',z:11,charge:1},'K':{name:'Potássio',symbol:'K⁺',z:19,charge:1},'Mg':{name:'Magnésio',symbol:'Mg²',z:12,charge:2},'Ca':{name:'Cálcio',symbol:'Ca²',z:20,charge:2},'Al':{name:'Alumínio',symbol:'Al³',z:13,charge:3},'Fe2':{name:'Ferro II',symbol:'Fe²',z:26,charge:2},'F':{name:'Flúor',symbol:'F⁻',z:9,charge:-1},'Cl':{name:'Cloro',symbol:'Cl⁻',z:17,charge:-1},'O':{name:'Oxigênio',symbol:'O²',z:8,charge:-2},'S':{name:'Enxofre',symbol:'S²',z:16,charge:-2},'N':{name:'Nitrogênio',symbol:'N³',z:7,charge:-3},'C':{name:'Carbono',symbol:'C',z:6,charge:4,isFlexible:true,options:[4,-4]},'P':{name:'Próton',symbol:'p⁺',z:0,charge:1,isCoringa:true},'E':{name:'Elétron',symbol:'e⁻',z:0,charge:-1,isCoringa:true},'Nn':{name:'Nêutron',symbol:'n⁰',z:1,charge:0,isCoringa:true},};
-const INITIAL_HP = 100; const DECK_SIZE = 30; const HAND_SIZE = 5; const HYPER_INSTABILITY_THRESHOLD = 6; const SUPERHEAVY_THRESHOLD = 82; 
-let gameState = {};
-const UIElements = {gameContainer:document.getElementById('game-container'),startScreen:document.getElementById('start-screen'),pileSelectionScreen:document.getElementById('pile-selection-screen'),gameOverScreen:document.getElementById('game-over-screen'),reactionArea:document.getElementById('reaction-area'),player:{name:document.getElementById('player-name'),hpText:document.getElementById('player-hp-text'),hpFill:document.getElementById('player-hp-fill'),hand:document.getElementById('player-hand'),deckCount:document.getElementById('player-deck-count')},opponent:{name:document.getElementById('opponent-name'),hpText:document.getElementById('opponent-hp-text'),hpFill:document.getElementById('opponent-hp-fill'),hand:document.getElementById('opponent-hand'),deckCount:document.getElementById('opponent-deck-count')},reaction:{compound:document.getElementById('reaction-compound'),charge:document.getElementById('reaction-charge'),text:document.getElementById('reaction-text'),mass:document.getElementById('reaction-mass')},info:{log:document.getElementById('game-log'),turnIndicator:document.getElementById('turn-indicator'),gameOverMessage:document.getElementById('game-over-message')}};
+    <div id="pile-selection-screen" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>🎴 Seleção de Cartas</h2>
+            <p>Seu oponente dividiu o deck. Escolha uma pilha para fortalecer seu arsenal!</p>
+            <div id="pile-selection">
+                <div class="pile" onclick="selectPile(0)"></div><div class="pile" onclick="selectPile(1)"></div><div class="pile" onclick="selectPile(2)"></div>
+            </div>
+        </div>
+    </div>
 
-function initGame() {
-    UIElements.gameOverScreen.style.display = 'none';
-    UIElements.startScreen.style.display = 'none';
-    gameState = {
-        players: [
-            { id: 'player', name: 'Jogador', hp: INITIAL_HP, deck: [], hand: [], discard: [] },
-            { id: 'opponent', name: 'IA Quimista', hp: INITIAL_HP, deck: [], hand: [], discard: [] }
-        ],
-        currentPlayerIndex: 0,
-        reactionCompound: [],
-        turn: 1,
-        isGameOver: false,
-        isFirstTurnOfReaction: true,
-        // --- ALTERAÇÃO JS: Nova propriedade para controlar a iniciativa ---
-        nextInitiativePlayerIndex: null,
-        pileSelection: { piles: [], chooser: null, giver: null, }
-    };
-    const opponentBaseDeck = createDeck();
-    const opponentPiles = [opponentBaseDeck.slice(0, 10), opponentBaseDeck.slice(10, 20), opponentBaseDeck.slice(20, 30)];
-    gameState.pileSelection.piles = opponentPiles;
-    gameState.pileSelection.chooser = gameState.players[0];
-    gameState.pileSelection.giver = gameState.players[1];
-    UIElements.pileSelectionScreen.style.display = 'flex';
-    UIElements.gameContainer.style.display = 'none';
-}
+    <div id="game-over-screen" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="game-over-message"></h2>
+            <button id="restart-game-btn">🔄 Nova Batalha</button>
+        </div>
+    </div>
 
-function createDeck() { const deck = []; const cardPool = ['H','H','Na','K','Mg','Ca','Fe2','F','F','Cl','Cl','O','O','S','C','Al','N','P','P','E','E','Nn','Nn']; for (let i = 0; i < DECK_SIZE; i++) { deck.push({ ...CARD_DATABASE[cardPool[i % cardPool.length]], id: `${cardPool[i % cardPool.length]}_${i}` }); } return shuffle(deck); }
-function shuffle(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
-function logMessage(message) { const p = document.createElement('p'); p.textContent = message; UIElements.info.log.prepend(p); }
-function selectPile(pileIndex) { const { piles, chooser, giver } = gameState.pileSelection; const chosenPile = piles[pileIndex]; chooser.deck.push(...chosenPile); logMessage(`${chooser.name} pegou uma pilha de 10 cartas do oponente.`); const remainingPiles = piles.filter((_, index) => index !== pileIndex); giver.deck.push(...remainingPiles.flat()); const playerBaseDeck = createDeck(); const playerPiles = [playerBaseDeck.slice(0, 10), playerBaseDeck.slice(10, 20), playerBaseDeck.slice(20, 30)]; const aiChosenIndex = Math.floor(Math.random() * 3); const aiChosenPile = playerPiles[aiChosenIndex]; giver.deck.push(...aiChosenPile); logMessage(`A IA pegou uma pilha de 10 cartas do seu deck.`); const playerRemainingPiles = playerPiles.filter((_, index) => index !== aiChosenIndex); chooser.deck.push(...playerRemainingPiles.flat()); gameState.players.forEach(p => shuffle(p.deck)); UIElements.pileSelectionScreen.style.display = 'none'; UIElements.gameContainer.style.display = 'grid'; startGameLoop(); }
-function startGameLoop() { for (let i = 0; i < HAND_SIZE; i++) { drawCard(0); drawCard(1); } updateUI(); logMessage("O jogo começou! É a sua vez."); UIElements.info.turnIndicator.textContent = "Seu Turno"; }
-function drawCard(playerIndex) { const player = gameState.players[playerIndex]; if (player.deck.length === 0) { if (player.discard.length === 0) { logMessage(`${player.name} não tem mais cartas para comprar!`); return; } player.deck = shuffle(player.discard); player.discard = []; logMessage(`${player.name} embaralhou a pilha de descarte para formar um novo deck.`); } const card = player.deck.pop(); player.hand.push(card); }
-
-function playCard(playerIndex, cardHandIndex) {
-    if (gameState.isGameOver || gameState.currentPlayerIndex !== playerIndex) return;
-    const player = gameState.players[playerIndex];
-    const card = player.hand[cardHandIndex];
-    if (card.isFlexible && card.options) { const chosenCharge = prompt(`Escolha a carga para ${card.name} (${card.symbol}):\nDigite ${card.options[0]} ou ${card.options[1]}`, card.options[0]); const chargeValue = parseInt(chosenCharge); if (card.options.includes(chargeValue)) { card.charge = chargeValue; } else { alert("Escolha inválida. Tente novamente."); return; } }
-    player.hand.splice(cardHandIndex, 1);
-    gameState.reactionCompound.push(card);
-    logMessage(`${player.name} jogou ${card.name} (${card.symbol}).`);
-    updateUI();
-    const { charge, damage } = calculateCompoundStats();
-    if (Math.abs(charge) > HYPER_INSTABILITY_THRESHOLD) { UIElements.reactionArea.classList.add('hyper-unstable'); setTimeout(() => { logMessage(`☢️ HIPER-INSTABILIDADE! A carga (${charge}) excedeu o limite de +/-${HYPER_INSTABILITY_THRESHOLD} e explodiu!`); dealDamage(playerIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, 1000); }, 500); return; }
-    if (damage > SUPERHEAVY_THRESHOLD) { UIElements.reactionArea.classList.add('superheavy-unstable'); setTimeout(() => { logMessage(`⚛️ INSTABILIDADE SUPERPESADA! A massa total (Z=${damage}) excedeu o limite de ${SUPERHEAVY_THRESHOLD} e explodiu!`); dealDamage(playerIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, 1000); }, 500); return; }
-    if (charge === 0) { const opponentIndex = 1 - playerIndex; logMessage(`✅ MOLÉCULA ESTÁVEL! ${gameState.players[opponentIndex].name} sofreu ${damage} de dano.`); dealDamage(opponentIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, 1000); return; }
-    gameState.isFirstTurnOfReaction = false;
-    setTimeout(endTurn, 1000);
-}
-
-function calculateCompoundStats() { return gameState.reactionCompound.reduce((acc, card) => { acc.charge += card.charge; acc.damage += card.z; return acc; }, { charge: 0, damage: 0 }); }
-
-// --- ALTERAÇÃO JS: dealDamage agora define quem terá a próxima iniciativa ---
-function dealDamage(playerIndex, amount) {
-    const player = gameState.players[playerIndex];
-    player.hp = Math.max(0, player.hp - amount);
-    logMessage(`${player.name} agora tem ${player.hp} de Estabilidade.`);
+    <div id="flexible-card-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="flexible-card-title">Escolha a Carga</h2>
+            <p>O Carbono é flexível. Escolha qual carga ele terá nesta jogada.</p>
+            <div id="flexible-card-options"></div>
+        </div>
+    </div>
     
-    // O jogador que NÃO sofreu dano ganha a próxima iniciativa.
-    gameState.nextInitiativePlayerIndex = 1 - playerIndex;
+    <div id="card-tooltip"></div>
 
-    if (player.hp <= 0) {
-        gameState.isGameOver = true;
-        const winner = gameState.players[1 - playerIndex];
-        UIElements.info.gameOverMessage.textContent = `${winner.name} venceu!`;
-        UIElements.gameOverScreen.style.display = 'flex';
-    }
-}
+    <script>
+        const CARD_DATABASE = {
+            'H': {name: 'Hidrogênio', symbol: 'H⁺', z: 1, charge: 1, color: '#ff6b6b'},
+            'Na': {name: 'Sódio', symbol: 'Na⁺', z: 11, charge: 1, color: '#feca57'},
+            'K': {name: 'Potássio', symbol: 'K⁺', z: 19, charge: 1, color: '#ff9ff3'},
+            'Mg': {name: 'Magnésio', symbol: 'Mg²⁺', z: 12, charge: 2, color: '#54a0ff'},
+            'Ca': {name: 'Cálcio', symbol: 'Ca²⁺', z: 20, charge: 2, color: '#5f27cd'},
+            'Al': {name: 'Alumínio', symbol: 'Al³⁺', z: 13, charge: 3, color: '#00d2d3'},
+            'Fe2': {name: 'Ferro II', symbol: 'Fe²⁺', z: 26, charge: 2, color: '#ff6348'},
+            'F': {name: 'Flúor', symbol: 'F⁻', z: 9, charge: -1, color: '#2ed573'},
+            'Cl': {name: 'Cloro', symbol: 'Cl⁻', z: 17, charge: -1, color: '#1dd1a1'},
+            'O': {name: 'Oxigênio', symbol: 'O²⁻', z: 8, charge: -2, color: '#0abde3'},
+            'S': {name: 'Enxofre', symbol: 'S²⁻', z: 16, charge: -2, color: '#feca57'},
+            'N': {name: 'Nitrogênio', symbol: 'N³⁻', z: 7, charge: -3, color: '#2d98da'},
+            'C': {name: 'Carbono', symbol: 'C', z: 6, charge: 4, isFlexible: true, options: [4, -4], color: '#a4b0be'},
+            'P': {name: 'Próton', symbol: 'p⁺', z: 0, charge: 1, isCoringa: true, color: '#ff4757'},
+            'E': {name: 'Elétron', symbol: 'e⁻', z: 0, charge: -1, isCoringa: true, color: '#3742fa'},
+            'Nn': {name: 'Nêutron', symbol: 'n⁰', z: 1, charge: 0, isCoringa: true, color: '#747d8c'}
+        };
 
-function clearReaction() { const player = gameState.players[gameState.currentPlayerIndex]; player.discard.push(...gameState.reactionCompound); gameState.reactionCompound = []; gameState.isFirstTurnOfReaction = true; UIElements.reactionArea.classList.remove('hyper-unstable', 'superheavy-unstable'); logMessage("O composto foi removido do campo."); }
+        const INITIAL_HP = 100; const DECK_SIZE = 30; const HAND_SIZE = 5;
+        const HYPER_INSTABILITY_THRESHOLD = 6; const SUPERHEAVY_THRESHOLD = 82;
+        let gameState = {};
+        const UIElements = {
+            gameContainer: document.getElementById('game-container'),
+            startScreen: document.getElementById('start-screen'),
+            pileSelectionScreen: document.getElementById('pile-selection-screen'),
+            gameOverScreen: document.getElementById('game-over-screen'),
+            reactionArea: document.getElementById('reaction-area'),
+            player: { area: document.getElementById('player-area'), hpText: document.getElementById('player-hp-text'), hpFill: document.getElementById('player-hp-fill'), hand: document.getElementById('player-hand'), deckCount: document.getElementById('player-deck-count') },
+            opponent: { area: document.getElementById('opponent-area'), hpText: document.getElementById('opponent-hp-text'), hpFill: document.getElementById('opponent-hp-fill'), hand: document.getElementById('opponent-hand'), deckCount: document.getElementById('opponent-deck-count') },
+            reaction: { compound: document.getElementById('reaction-compound'), charge: document.getElementById('reaction-charge'), mass: document.getElementById('reaction-mass') },
+            info: { log: document.getElementById('game-log'), turnIndicator: document.getElementById('turn-indicator'), gameOverMessage: document.getElementById('game-over-message') },
+            flexibleCardModal: document.getElementById('flexible-card-modal'),
+            flexibleCardTitle: document.getElementById('flexible-card-title'),
+            flexibleCardOptions: document.getElementById('flexible-card-options'),
+            cardTooltip: document.getElementById('card-tooltip')
+        };
+        let tooltipTimeout;
 
-// --- ALTERAÇÃO JS: endTurn agora usa a nova propriedade de iniciativa ---
-function endTurn() {
-    if (gameState.isGameOver) return;
+        function createParticles() { const container = document.getElementById('particles-js'); for (let i = 0; i < 25; i++) { const particle = document.createElement('div'); particle.className = 'particle'; const size = Math.random() * 5 + 1; particle.style.width = `${size}px`; particle.style.height = `${size}px`; particle.style.left = `${Math.random() * 100}%`; particle.style.animationDuration = `${Math.random() * 5 + 5}s`; particle.style.animationDelay = `${Math.random() * 5}s`; container.appendChild(particle); } }
+        createParticles();
 
-    if (gameState.nextInitiativePlayerIndex !== null) {
-        // Uma reação foi resolvida. O jogador com a iniciativa começa.
-        gameState.currentPlayerIndex = gameState.nextInitiativePlayerIndex;
-        gameState.nextInitiativePlayerIndex = null; // Reseta a flag para o próximo ciclo.
-    } else {
-        // A reação está apenas sendo passada. Inverte o jogador.
-        gameState.currentPlayerIndex = 1 - gameState.currentPlayerIndex;
-    }
-    
-    const nextPlayer = gameState.players[gameState.currentPlayerIndex];
-    logMessage(`Turno de ${nextPlayer.name}.`);
-    startTurn();
-}
+        function initGame() {
+            UIElements.gameOverScreen.style.display = 'none';
+            UIElements.startScreen.style.display = 'none';
+            UIElements.info.log.innerHTML = '';
+            UIElements.reaction.compound.innerHTML = '';
+            gameState = {
+                players: [{ id: 'player', name: 'Jogador', hp: INITIAL_HP, deck: [], hand: [], discard: [] }, { id: 'opponent', name: 'IA Quimista', hp: INITIAL_HP, deck: [], hand: [], discard: [] }],
+                currentPlayerIndex: 0, reactionCompound: [], isGameOver: false, isFirstTurnOfReaction: true, 
+                nextInitiativePlayerIndex: null, 
+            };
+            const opponentBaseDeck = createDeck();
+            const opponentPiles = [opponentBaseDeck.slice(0, 10), opponentBaseDeck.slice(10, 20), opponentBaseDeck.slice(20, 30)];
+            gameState.pileSelection = { piles: opponentPiles, chooser: gameState.players[0], giver: gameState.players[1] };
+            UIElements.pileSelectionScreen.style.display = 'flex';
+            UIElements.gameContainer.style.display = 'none';
+        }
 
-function startTurn() { if (gameState.isGameOver) return; drawCard(gameState.currentPlayerIndex); updateUI(); const player = gameState.players[gameState.currentPlayerIndex]; const canPlay = player.hand.length > 0; if (gameState.reactionCompound.length > 0 && !gameState.isFirstTurnOfReaction) { if (!canPlay) { const { damage } = calculateCompoundStats(); logMessage(`💥 EXPLOSÃO! ${player.name} não pôde combinar e sofreu ${damage} de dano!`); dealDamage(gameState.currentPlayerIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, 2000); return; } } if (gameState.currentPlayerIndex === 1) { UIElements.info.turnIndicator.textContent = "IA está pensando..."; setTimeout(runAITurn, 1500); } else { UIElements.info.turnIndicator.textContent = "Seu Turno"; } }
-function runAITurn() { const ai = gameState.players[1]; const compoundStats = calculateCompoundStats(); const playableCards = ai.hand.map((card, index) => ({ card, index })).filter(({ card }) => { const newCharge = compoundStats.charge + card.charge; const newDamage = compoundStats.damage + card.z; return Math.abs(newCharge) <= HYPER_INSTABILITY_THRESHOLD && newDamage <= SUPERHEAVY_THRESHOLD; }); if (playableCards.length === 0 && ai.hand.length > 0) { logMessage("IA não tem jogadas seguras e é forçada a se explodir!"); let leastDamageIndex = 0; let minDamage = Infinity; ai.hand.forEach((card, index) => { const potentialDamage = compoundStats.damage + card.z; if (potentialDamage < minDamage) { minDamage = potentialDamage; leastDamageIndex = index; } }); playCard(1, leastDamageIndex); return; } for (const { card, index } of playableCards) { if (compoundStats.charge + card.charge === 0) { logMessage("IA encontrou uma jogada para estabilizar a molécula!"); playCard(1, index); return; } } if (gameState.reactionCompound.length > 0 && !gameState.isFirstTurnOfReaction && playableCards.length > 0) { logMessage("IA é forçada a jogar e escolhe a primeira carta segura."); playCard(1, playableCards[0].index); return; } if (gameState.reactionCompound.length === 0 && ai.hand.length > 0) { let cardToPlayIndex = 0; let lowestCharge = 100; for(let i=0; i<ai.hand.length; i++){ if(Math.abs(ai.hand[i].charge) < lowestCharge){ lowestCharge = Math.abs(ai.hand[i].charge); cardToPlayIndex = i; } } logMessage("IA inicia uma nova reação com uma carta de baixa carga."); playCard(1, cardToPlayIndex); return; } }
-function renderCard(card, isBack = false) { const cardEl = document.createElement('div'); cardEl.classList.add('card'); if (isBack) { cardEl.classList.add('card-back'); return cardEl; } const chargeClass = card.charge > 0 ? 'charge-positive' : (card.charge < 0 ? 'charge-negative' : 'charge-neutral'); cardEl.innerHTML = `<div class="card-header"><span class="card-name">${card.name}</span><span class="card-z">${card.z}</span></div><div class="card-symbol">${card.symbol}</div><div class="card-charge ${chargeClass}">${card.charge > 0 ? '+' : ''}${card.charge}</div>`; return cardEl; }
-function updateUI() { if (gameState.isGameOver) return; const player = gameState.players[0]; UIElements.player.hpText.textContent = `${player.hp}/${INITIAL_HP}`; UIElements.player.hpFill.style.width = `${(player.hp / INITIAL_HP) * 100}%`; UIElements.player.deckCount.textContent = player.deck.length; UIElements.player.hand.innerHTML = ''; player.hand.forEach((card, index) => { const cardEl = renderCard(card); if (gameState.currentPlayerIndex === 0) { cardEl.addEventListener('click', () => playCard(0, index)); } UIElements.player.hand.appendChild(cardEl); }); const opponent = gameState.players[1]; UIElements.opponent.hpText.textContent = `${opponent.hp}/${INITIAL_HP}`; UIElements.opponent.hpFill.style.width = `${(opponent.hp / INITIAL_HP) * 100}%`; UIElements.opponent.deckCount.textContent = opponent.deck.length; UIElements.opponent.hand.innerHTML = ''; opponent.hand.forEach(() => { UIElements.opponent.hand.appendChild(renderCard(null, true)); }); UIElements.reaction.compound.innerHTML = ''; gameState.reactionCompound.forEach(card => { UIElements.reaction.compound.appendChild(renderCard(card)); }); const { charge, damage } = calculateCompoundStats(); UIElements.reaction.charge.textContent = charge > 0 ? `+${charge}` : charge; UIElements.reaction.charge.className = `stat-value ${charge > 0 ? 'charge-positive' : (charge < 0 ? 'charge-negative' : 'charge-neutral')}`; UIElements.reaction.mass.textContent = damage; }
-document.getElementById('start-game-btn').addEventListener('click', initGame);
-document.getElementById('restart-game-btn').addEventListener('click', initGame);
-</script>
+        function createDeck() { const deck = []; const cardPool = ['H', 'H', 'Na', 'K', 'Mg', 'Ca', 'Fe2', 'F', 'F', 'Cl', 'Cl', 'O', 'O', 'S', 'C', 'Al', 'N', 'P', 'P', 'E', 'E', 'Nn', 'Nn']; for (let i = 0; i < DECK_SIZE; i++) { deck.push({ ...CARD_DATABASE[cardPool[i % cardPool.length]], id: `${cardPool[i % cardPool.length]}_${i}` }); } return shuffle(deck); }
+        function shuffle(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+        function logMessage(message) { const p = document.createElement('p'); p.textContent = `> ${message}`; UIElements.info.log.prepend(p); }
+        
+        function selectPile(pileIndex) {
+            const { piles, chooser, giver } = gameState.pileSelection;
+            chooser.deck.push(...piles[pileIndex]);
+            logMessage(`${chooser.name} pegou uma pilha de cartas.`);
+            const remainingPiles = piles.filter((_, index) => index !== pileIndex);
+            giver.deck.push(...remainingPiles.flat());
+            const playerBaseDeck = createDeck();
+            const playerPiles = [playerBaseDeck.slice(0, 10), playerBaseDeck.slice(10, 20), playerBaseDeck.slice(20, 30)];
+            const aiChosenIndex = Math.floor(Math.random() * 3);
+            giver.deck.push(...playerPiles[aiChosenIndex]);
+            logMessage(`A IA pegou uma pilha de cartas.`);
+            const playerRemainingPiles = playerPiles.filter((_, index) => index !== aiChosenIndex);
+            chooser.deck.push(...playerRemainingPiles.flat());
+            gameState.players.forEach(p => shuffle(p.deck));
+            UIElements.pileSelectionScreen.style.display = 'none';
+            UIElements.gameContainer.style.display = 'grid';
+            startGameLoop();
+        }
+
+        function startGameLoop() { for (let i = 0; i < HAND_SIZE; i++) { drawCard(0); drawCard(1); } updateUI(); logMessage("A batalha química começou!"); startTurn(); }
+        function drawCard(playerIndex) { const player = gameState.players[playerIndex]; if (player.deck.length === 0) { if (player.discard.length === 0) { logMessage(`${player.name} não tem mais cartas!`); return; } player.deck = shuffle(player.discard); player.discard = []; logMessage(`${player.name} reciclou o descarte.`); } if (player.hand.length < HAND_SIZE) { const card = player.deck.pop(); player.hand.push(card); } }
+
+        function playCard(playerIndex, cardHandIndex) {
+            if (gameState.isGameOver || gameState.currentPlayerIndex !== playerIndex) return;
+            const card = gameState.players[playerIndex].hand[cardHandIndex];
+            if (card.isFlexible) {
+                if (playerIndex === 1) {
+                    const chosenCharge = card.options[Math.floor(Math.random() * card.options.length)];
+                    card.charge = chosenCharge;
+                    logMessage(`IA escolheu a carga ${chosenCharge} para o Carbono.`);
+                    finishPlayingCard(playerIndex, card);
+                } else {
+                    UIElements.flexibleCardTitle.textContent = `Escolha a Carga para ${card.name}`;
+                    UIElements.flexibleCardOptions.innerHTML = '';
+                    card.options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.textContent = option > 0 ? `+${option}` : option;
+                        button.onclick = () => { card.charge = option; UIElements.flexibleCardModal.style.display = 'none'; finishPlayingCard(playerIndex, card); };
+                        UIElements.flexibleCardOptions.appendChild(button);
+                    });
+                    UIElements.flexibleCardModal.style.display = 'flex';
+                }
+                return;
+            }
+            finishPlayingCard(playerIndex, card);
+        }
+
+        function finishPlayingCard(playerIndex, card) {
+            const player = gameState.players[playerIndex];
+            const originalIndex = player.hand.findIndex(c => c.id === card.id);
+            if (originalIndex !== -1) player.hand.splice(originalIndex, 1);
+            
+            gameState.reactionCompound.push(card);
+            logMessage(`${player.name} jogou ${card.name} (${card.symbol}).`);
+            
+            // BUG FIX: Manually add the new card to the DOM with animation.
+            const newCardEl = renderCard(card);
+            newCardEl.classList.add('animate-in');
+            UIElements.reaction.compound.appendChild(newCardEl);
+
+            // Update the rest of the UI without re-rendering the whole reaction area
+            updateUI(); 
+
+            const { charge, damage } = calculateCompoundStats();
+            const turnDelay = 1000; 
+            if (Math.abs(charge) > HYPER_INSTABILITY_THRESHOLD) { UIElements.reactionArea.classList.add('hyper-unstable'); setTimeout(() => { logMessage(`☢️ HIPER-INSTABILIDADE! Carga (${charge}) excedeu o limite!`); dealDamage(playerIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, turnDelay); }, 500); return; }
+            if (damage > SUPERHEAVY_THRESHOLD) { UIElements.reactionArea.classList.add('superheavy-unstable'); setTimeout(() => { logMessage(`⚛️ INSTABILIDADE SUPERPESADA! Massa (Z=${damage}) excedeu o limite!`); dealDamage(playerIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, turnDelay); }, 500); return; }
+            if (charge === 0) { const opponentIndex = 1 - playerIndex; logMessage(`✅ MOLÉCULA ESTÁVEL! Dano de ${damage} em ${gameState.players[opponentIndex].name}.`); dealDamage(opponentIndex, damage); clearReaction(); updateUI(); setTimeout(endTurn, turnDelay); return; }
+            gameState.isFirstTurnOfReaction = false;
+            setTimeout(endTurn, turnDelay);
+        }
+
+        function calculateCompoundStats() { return gameState.reactionCompound.reduce((acc, card) => { acc.charge += card.charge; acc.damage += card.z; return acc; }, { charge: 0, damage: 0 }); }
+        
+        function createExplosion(targetElement) { const explosion = document.createElement('div'); explosion.className = 'explosion'; targetElement.appendChild(explosion); setTimeout(() => explosion.remove(), 600); }
+
+        function dealDamage(playerIndex, amount) {
+            const player = gameState.players[playerIndex];
+            player.hp = Math.max(0, player.hp - amount);
+            createExplosion(playerIndex === 0 ? UIElements.player.area : UIElements.opponent.area);
+            logMessage(`${player.name} sofreu ${amount} de dano! Estabilidade: ${player.hp}`);
+            gameState.nextInitiativePlayerIndex = 1 - playerIndex;
+            if (player.hp <= 0) {
+                gameState.isGameOver = true;
+                const winner = gameState.players[1 - playerIndex];
+                UIElements.info.gameOverMessage.textContent = `${winner.name} VENCEU A BATALHA!`;
+                UIElements.gameOverScreen.style.display = 'flex';
+            }
+        }
+
+        function clearReaction() {
+            if (gameState.nextInitiativePlayerIndex === null) return;
+            const playerWithInitiative = gameState.players[gameState.nextInitiativePlayerIndex];
+            playerWithInitiative.discard.push(...gameState.reactionCompound);
+            gameState.reactionCompound = [];
+            gameState.isFirstTurnOfReaction = true;
+            UIElements.reactionArea.classList.remove('hyper-unstable', 'superheavy-unstable');
+            // BUG FIX: Manually clear the DOM here.
+            UIElements.reaction.compound.innerHTML = '';
+            logMessage("Composto removido. Iniciativa para " + playerWithInitiative.name);
+        }
+
+        function endTurn() {
+            if (gameState.isGameOver) return;
+            if (gameState.nextInitiativePlayerIndex !== null) {
+                gameState.currentPlayerIndex = gameState.nextInitiativePlayerIndex;
+                gameState.nextInitiativePlayerIndex = null;
+            } else {
+                gameState.currentPlayerIndex = 1 - gameState.currentPlayerIndex;
+            }
+            startTurn();
+        }
+
+        function startTurn() {
+            if (gameState.isGameOver) return;
+            drawCard(gameState.currentPlayerIndex);
+            updateUI();
+            UIElements.player.area.classList.toggle('active', gameState.currentPlayerIndex === 0);
+            UIElements.opponent.area.classList.toggle('active', gameState.currentPlayerIndex === 1);
+            const player = gameState.players[gameState.currentPlayerIndex];
+            const indicator = UIElements.info.turnIndicator;
+            if (gameState.currentPlayerIndex === 0) {
+                indicator.textContent = "Seu Turno de Agir!";
+                indicator.style.borderColor = 'var(--neon-blue)';
+            } else {
+                indicator.textContent = "IA está Calculando...";
+                indicator.style.borderColor = 'var(--neon-purple)';
+            }
+            if (gameState.reactionCompound.length > 0 && !gameState.isFirstTurnOfReaction && player.hand.length === 0) {
+                const { damage } = calculateCompoundStats();
+                logMessage(`💥 ${player.name} sem cartas para jogar e sofreu ${damage} de dano!`);
+                dealDamage(gameState.currentPlayerIndex, damage);
+                clearReaction();
+                updateUI();
+                setTimeout(endTurn, 1500);
+                return;
+            }
+            if (gameState.currentPlayerIndex === 1) { setTimeout(runAITurn, 1500); }
+        }
+
+        function runAITurn() {
+            const ai = gameState.players[1];
+            if (ai.hand.length === 0) { endTurn(); return; }
+            const compoundStats = calculateCompoundStats();
+            const winningMove = ai.hand.find(card => compoundStats.charge + (card.isFlexible ? card.options[0] : card.charge) === 0 || compoundStats.charge + (card.isFlexible ? card.options[1] : card.charge) === 0);
+            if (winningMove) { logMessage("IA: Jogada de estabilização encontrada!"); playCard(1, ai.hand.indexOf(winningMove)); return; }
+            const safeMoves = ai.hand.map((card, index) => ({ card, index })).filter(({ card }) => (Math.abs(compoundStats.charge + card.charge) <= HYPER_INSTABILITY_THRESHOLD && compoundStats.damage + card.z <= SUPERHEAVY_THRESHOLD));
+            if (gameState.reactionCompound.length === 0) {
+                let cardToPlay = ai.hand.reduce((prev, current) => (Math.abs(prev.charge) > Math.abs(current.charge)) ? prev : current);
+                logMessage("IA: Iniciando reação de alta pressão!");
+                playCard(1, ai.hand.indexOf(cardToPlay));
+            } else {
+                if (safeMoves.length > 0) { logMessage("IA: Continuando com uma jogada segura."); playCard(1, safeMoves[0].index); }
+                else {
+                    logMessage("IA: Sem jogadas seguras! Minimizando danos...");
+                    let leastDamageMove = ai.hand.map((card, index) => ({ card, index, mass: compoundStats.damage + card.z })).reduce((p, c) => (p.mass < c.mass) ? p : c);
+                    playCard(1, leastDamageMove.index);
+                }
+            }
+        }
+
+        function renderCard(card, isBack = false) {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            if (isBack) { cardEl.classList.add('card-back'); return cardEl; }
+            const chargeClass = card.charge > 0 ? 'charge-positive' : (card.charge < 0 ? 'charge-negative' : 'charge-neutral');
+            cardEl.innerHTML = `<div class="card-header"><span class="card-name">${card.name}</span><span class="card-z">${card.z}</span></div><div class="card-symbol">${card.symbol}</div><div class="card-charge ${chargeClass}">${card.charge > 0 ? '+' : ''}${card.charge}</div>`;
+            cardEl.querySelector('.card-symbol').style.color = card.color;
+            return cardEl;
+        }
+
+        function updateUI() {
+            if (gameState.isGameOver) return;
+            // Update Players
+            [{p: gameState.players[0], ui: UIElements.player}, {p: gameState.players[1], ui: UIElements.opponent}].forEach(obj => {
+                obj.ui.hpText.textContent = `${obj.p.hp}/${INITIAL_HP}`;
+                const hpPercent = (obj.p.hp / INITIAL_HP);
+                obj.ui.hpFill.style.width = `${hpPercent * 100}%`;
+                obj.ui.hpFill.style.backgroundPosition = `${(1-hpPercent)*100}%`;
+                obj.ui.deckCount.textContent = obj.p.deck.length;
+            });
+            
+            // Update Player Hand
+            UIElements.player.hand.innerHTML = '';
+            gameState.players[0].hand.forEach((card, index) => {
+                const cardEl = renderCard(card);
+                if (gameState.currentPlayerIndex === 0) {
+                    cardEl.addEventListener('click', () => playCard(0, index));
+                    cardEl.addEventListener('mouseenter', e => { clearTimeout(tooltipTimeout); UIElements.cardTooltip.textContent = card.name; UIElements.cardTooltip.style.left = `${e.clientX + 15}px`; UIElements.cardTooltip.style.top = `${e.clientY - 30}px`; UIElements.cardTooltip.style.opacity = '1'; });
+                    cardEl.addEventListener('mouseleave', () => { tooltipTimeout = setTimeout(() => { UIElements.cardTooltip.style.opacity = '0'; }, 50); });
+                    cardEl.addEventListener('mousemove', e => { UIElements.cardTooltip.style.left = `${e.clientX + 15}px`; UIElements.cardTooltip.style.top = `${e.clientY - 30}px`; });
+                }
+                UIElements.player.hand.appendChild(cardEl);
+            });
+            
+            // Update Opponent Hand
+            UIElements.opponent.hand.innerHTML = '';
+            gameState.players[1].hand.forEach(() => { UIElements.opponent.hand.appendChild(renderCard(null, true)); });
+            
+            // BUG FIX: This function NO LONGER renders the reaction compound.
+            // It only updates the stats display.
+            const { charge, damage } = calculateCompoundStats();
+            UIElements.reaction.charge.textContent = charge > 0 ? `+${charge}` : charge;
+            UIElements.reaction.charge.className = `stat-value ${charge > 0 ? 'charge-positive' : (charge < 0 ? 'charge-negative' : 'charge-neutral')}`;
+            UIElements.reaction.mass.textContent = damage;
+        }
+
+        document.getElementById('start-game-btn').addEventListener('click', initGame);
+        document.getElementById('restart-game-btn').addEventListener('click', initGame);
+    </script>
 </body>
 </html>
