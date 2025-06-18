@@ -9,7 +9,9 @@ import { SoundManager } from './utils/SoundManager.js';
 export class Game {
     constructor() {
         this.soundManager = new SoundManager(SOUND_CONFIG);
-        this.soundManager.loadSounds();
+        // Load sounds immediately but don't play anything yet
+        this.soundManager.loadSounds(); 
+
         this.uiManager = new UIManager(this.soundManager);
         this.ai = new AIPlayer(this);
         this.players = [
@@ -24,9 +26,12 @@ export class Game {
     }
 
     init() {
+        // THIS IS THE CRUCIAL PART. We unlock the audio context
+        // inside the event handler of the user's first click.
+        this.soundManager.unlockAudioContext(); 
+        
         this.isGameOver = false;
         this.soundManager.stopAll();
-        this.soundManager.unlockAudioContext(); // Unlocked by the button click
         this.soundManager.play('start_game');
         this.uiManager.resetUI();
         
@@ -72,29 +77,6 @@ export class Game {
         this.uiManager.logMessage("A batalha química começou!");
         this.soundManager.play('bg_music');
         this.startTurn();
-    }
-    
-    startTurn() {
-        if (this.isGameOver) return;
-        
-        const currentPlayer = this.players[this.currentPlayerIndex];
-        currentPlayer.drawCard();
-        this.updateFullUI();
-        this.uiManager.setTurnIndicator(currentPlayer);
-        
-        if (this.reactionCompound.length > 0 && !this.isFirstTurnOfReaction && currentPlayer.hand.length === 0) {
-            const { damage } = calculateCompoundStats(this.reactionCompound);
-            this.uiManager.logMessage(`💥 ${currentPlayer.name} sem cartas para jogar e sofreu ${damage} de dano!`);
-            this.dealDamage(this.currentPlayerIndex, damage);
-            this.clearReaction();
-            this.updateFullUI();
-            setTimeout(() => this.endTurn(), 1500);
-            return;
-        }
-
-        if (this.currentPlayerIndex === 1) { // AI's turn
-            setTimeout(() => this.ai.makeMove(), 1500);
-        }
     }
     
     endTurn() {
