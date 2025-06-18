@@ -1,0 +1,40 @@
+
+.card {
+    width: 130px; height: 185px; background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px; color: var(--text-light); display: flex; flex-direction: column;
+    justify-content: space-between; padding: 12px; cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;
+    overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.card::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s;
+}
+.card:hover::before { left: 100%; }
+#player-hand .card:hover {
+    transform: translateY(-20px) scale(1.1); box-shadow: 0 20px 40px rgba(0, 245, 255, 0.2);
+    border-color: var(--neon-blue); z-index: 10;
+}
+.card.card-back {
+    background: linear-gradient(145deg, #2a2a3e, #1a1a2e); border-color: var(--neon-purple); cursor: default;
+}
+.card.card-back::after {
+    content: '⚛️'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 50px; animation: spin 4s linear infinite; text-shadow: 0 0 20px var(--neon-purple);
+}
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.card-name { font-weight: 700; font-size: 13px; flex-grow: 1; text-shadow: var(--text-glow); }
+.card-z {
+    font-size: 14px; background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+    border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center;
+    align-items: center; flex-shrink: 0; font-weight: 900; box-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
+}
+.card-symbol {
+    font-size: 44px; text-align: center; flex-grow: 1; display: flex; justify-content: center; align-items: center;
+    font-weight: 900; animation: glow 2s ease-in-out infinite alternate;
+}
+.card-charge { font-size: 26px; font-weight: 900; text-align: right; text-shadow: var(--text-glow); }
+.charge-positive { color: var(--neon-red); }
+.charge-negative { color: var(--neon-blue); }
+.charge-neutral { color: var(--neon-green); }
