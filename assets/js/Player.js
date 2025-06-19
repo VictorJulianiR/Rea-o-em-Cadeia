@@ -1,6 +1,5 @@
-
 import { shuffle } from './utils/helpers.js';
-import { CARD_DATABASE, DECK_SIZE, HAND_SIZE } from './config/gameConfig.js';
+import { CARD_DATABASE, HAND_SIZE, DECK_LISTS } from './config/gameConfig.js';
 
 export class Player {
     constructor(id, name, uiManager) {
@@ -14,17 +13,25 @@ export class Player {
         this.deck = [];
         this.hand = [];
         this.discard = [];
+        this.piles = []; // To hold the split deck during the swap phase
     }
 
-    createDeck() {
-        const cardPool = ['H', 'H', 'Li', 'Na', 'K', 'Mg', 'Ca', 'Fe2', 'F', 'F', 'Cl', 'Cl', 'O', 'O', 'S', 'C', 'Al', 'N', 'P', 'P', 'E', 'E', 'Nn', 'Nn'];
-        const newDeck = [];
-        for (let i = 0; i < DECK_SIZE; i++) {
-            const cardKey = cardPool[i % cardPool.length];
-            // Create a fresh copy of the card object
-            newDeck.push({ ...CARD_DATABASE[cardKey], id: `${cardKey}_${this.id}_${i}` });
+    buildDeckFromList(deckListName) {
+        const cardList = DECK_LISTS[deckListName];
+        if (!cardList) {
+            console.error(`Deck list "${deckListName}" not found in gameConfig.js`);
+            return;
         }
-        return shuffle(newDeck);
+
+        const newDeck = cardList.map((cardKey, index) => {
+            if (!CARD_DATABASE[cardKey]) {
+                console.error(`Card key "${cardKey}" in deck "${deckListName}" not found in CARD_DATABASE.`);
+                return null;
+            }
+            return { ...CARD_DATABASE[cardKey], id: `${cardKey}_${this.id}_${index}` };
+        }).filter(card => card !== null);
+
+        this.deck = newDeck; // We shuffle AFTER the swap
     }
 
     drawCard() {

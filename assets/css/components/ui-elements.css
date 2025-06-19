@@ -1,4 +1,3 @@
-
 #game-container {
     width: 100vw; height: 100vh; display: grid; grid-template-rows: 1fr 2fr 1fr;
     grid-template-columns: 4fr 1.2fr; gap: 20px; padding: 20px; position: relative;
@@ -60,15 +59,51 @@
     border: 1px solid rgba(255, 255, 255, 0.1); font-family: 'Roboto Mono', monospace;
 }
 #game-log p { margin: 4px 0; font-size: 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; animation: logEntry 0.5s ease-out; }
-#pile-selection { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
+#pile-selection { display: flex; gap: 20px; justify-content: center; margin-top: 30px; align-items: flex-start; }
+
+/* --- NEW and UPDATED PILE STYLES --- */
+.pile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* Space between pile and text */
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
 .pile {
     width: 120px; height: 170px; background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
     border: 3px solid var(--neon-purple); border-radius: 15px; display: flex; justify-content: center;
-    align-items: center; cursor: pointer; transition: all 0.3s ease; font-size: 48px;
+    align-items: center; font-size: 48px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease; /* Keep transition for the hover effect */
 }
-.pile:hover { transform: translateY(-10px) scale(1.1); border-color: var(--neon-blue); box-shadow: 0 15px 30px rgba(0, 245, 255, 0.3); }
-.pile::after { content: '🃏'; animation: bounce 2s infinite; }
+
+.pile-container:hover .pile {
+    transform: translateY(-10px) scale(1.1);
+    border-color: var(--neon-blue);
+    box-shadow: 0 15px 30px rgba(0, 245, 255, 0.3);
+}
+
+.pile::after {
+    content: '🃏';
+    animation: bounce 2s infinite;
+}
+
+.pile-charge-info {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-light);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+/* --- END OF PILE STYLES --- */
+
 .deck-info {
     position: absolute; bottom: 15px; right: 20px; background: rgba(0, 0, 0, 0.3);
     padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);

@@ -42,12 +42,10 @@ export class UIManager {
         ui.hpFill.style.backgroundPosition = `${(1 - hpPercent) * 100}%`;
         ui.deckCount.textContent = player.deck.length;
 
-        // Update hand
         ui.hand.innerHTML = '';
         if (player.id === 'player') {
-            player.hand.forEach((card, index) => {
+            player.hand.forEach((card) => {
                 const cardEl = this.renderCard(card);
-                // The event listener logic will be handled by the Game class, which has the context
                 ui.hand.appendChild(cardEl);
             });
         } else {
@@ -94,18 +92,52 @@ export class UIManager {
         this.elements.gameOverScreen.style.display = 'flex';
     }
 
-    showPileSelection(callback) {
+    showDeckSelection(deckLists, callback) {
+        this.elements.deckSelectionOptions.innerHTML = '';
+        for (const deckKey in deckLists) {
+            const button = document.createElement('button');
+            button.textContent = deckKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            button.onclick = () => {
+                this.soundManager.play('ui_click');
+                this.elements.deckSelectionScreen.style.display = 'none';
+                callback(deckKey);
+            };
+            this.elements.deckSelectionOptions.appendChild(button);
+        }
+        this.elements.deckSelectionScreen.style.display = 'flex';
+    }
+
+    showSwapScreen(aiPilesWithCharge, callback) {
         this.elements.pileSelectionContainer.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
+        aiPilesWithCharge.forEach((item, index) => {
+            // Create a container for the pile and its info text
+            const containerEl = document.createElement('div');
+            containerEl.className = 'pile-container';
+
+            // Create the pile element (it will get its emoji from CSS)
             const pileEl = document.createElement('div');
             pileEl.className = 'pile';
-            pileEl.onclick = () => {
+
+            // Create the info element for the charge text
+            const chargeInfoEl = document.createElement('div');
+            chargeInfoEl.className = 'pile-charge-info';
+            const chargeText = item.charge > 0 ? `+${item.charge}` : item.charge;
+            chargeInfoEl.innerHTML = `<span>⚡ Carga: ${chargeText}</span>`;
+
+            // Append pile and info to the container
+            containerEl.appendChild(pileEl);
+            containerEl.appendChild(chargeInfoEl);
+
+            // Make the entire container clickable
+            containerEl.onclick = () => {
                 this.soundManager.play('ui_click');
-                callback(i);
+                this.elements.swapScreen.style.display = 'none';
+                callback(index);
             };
-            this.elements.pileSelectionContainer.appendChild(pileEl);
-        }
-        this.elements.pileSelectionScreen.style.display = 'flex';
+
+            this.elements.pileSelectionContainer.appendChild(containerEl);
+        });
+        this.elements.swapScreen.style.display = 'flex';
     }
     
     showFlexibleCardModal(card, callback) {
@@ -128,7 +160,7 @@ export class UIManager {
         this.elements.player.hand.childNodes.forEach((cardEl, index) => {
             cardEl.addEventListener('click', () => handler(index));
             
-            const cardData = handler.getCardData(index); // Assumes handler can provide card data
+            const cardData = handler.getCardData(index);
             cardEl.addEventListener('mouseenter', e => {
                 this.soundManager.play('card_hover');
                 clearTimeout(this.tooltipTimeout);
@@ -150,6 +182,8 @@ export class UIManager {
     resetUI() {
         this.elements.gameOverScreen.style.display = 'none';
         this.elements.startScreen.style.display = 'none';
+        this.elements.deckSelectionScreen.style.display = 'none';
+        this.elements.swapScreen.style.display = 'none';
         this.elements.info.log.innerHTML = '';
         this.clearReactionUI();
     }

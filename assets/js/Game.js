@@ -1,4 +1,4 @@
-import { INITIAL_HP, HAND_SIZE, HYPER_INSTABILITY_THRESHOLD, SUPERHEAVY_THRESHOLD, SOUND_CONFIG } from './config/gameConfig.js';
+import { INITIAL_HP, HAND_SIZE, HYPER_INSTABILITY_THRESHOLD, SUPERHEAVY_THRESHOLD, SOUND_CONFIG, DECK_LISTS } from './config/gameConfig.js';
 import { Player } from './Player.js';
 import { UIManager } from './UIManager.js';
 import { AIPlayer } from './ai/AIPlayer.js';
@@ -26,42 +26,88 @@ export class Game {
     init() {
         this.isGameOver = false;
         this.soundManager.stopAll();
-        this.soundManager.unlockAudioContext(); // Unlocked by the button click
-        this.soundManager.play('start_game');
+        this.soundManager.unlockAudioContext();
         this.uiManager.resetUI();
         
         this.players.forEach(p => p.init(INITIAL_HP));
         
-        this.uiManager.showPileSelection(pileIndex => this.selectInitialPiles(pileIndex));
-        this.uiManager.elements.gameContainer.style.display = 'none';
+        // Start the new game sequence
+        this.uiManager.showDeckSelection(DECK_LISTS, (deckKey) => this.selectDecks(deckKey));
     }
 
-    selectInitialPiles(playerChoiceIndex) {
-        const chooser = this.players[0];
-        const giver = this.players[1];
+    selectDecks(chosenDeckKey) {
+        const player = this.players[0];
+        const ai = this.players[1];
 
-        const opponentBaseDeck = giver.createDeck();
-        const opponentPiles = [opponentBaseDeck.slice(0, 10), opponentBaseDeck.slice(10, 20), opponentBaseDeck.slice(20, 30)];
-        chooser.deck.push(...opponentPiles[playerChoiceIndex]);
-        this.uiManager.logMessage(`${chooser.name} pegou uma pilha de cartas.`);
-        const remainingOpponentPiles = opponentPiles.filter((_, index) => index !== playerChoiceIndex);
-        giver.deck.push(...remainingOpponentPiles.flat());
+        // Assign chosen deck to player
+        player.buildDeckFromList(chosenDeckKey);
+        this.uiManager.logMessage(`Jogador escolheu o deck: ${chosenDeckKey}.`);
 
-        const playerBaseDeck = chooser.createDeck();
-        const playerPiles = [playerBaseDeck.slice(0, 10), playerBaseDeck.slice(10, 20), playerBaseDeck.slice(20, 30)];
-        const aiChosenIndex = Math.floor(Math.random() * 3);
-        giver.deck.push(...playerPiles[aiChosenIndex]);
-        this.uiManager.logMessage(`A IA pegou uma pilha de cartas.`);
-        const remainingPlayerPiles = playerPiles.filter((_, index) => index !== aiChosenIndex);
-        chooser.deck.push(...remainingPlayerPiles.flat());
-
-        this.players.forEach(p => {
-            p.deck = shuffle(p.deck)
-        });
+        // Assign a random, different deck to the AI
+        const deckKeys = Object.keys(DECK_LISTS);
+        let aiDeckKey = chosenDeckKey;
+        if (deckKeys.length > 1) {
+            const remainingDeckKeys = deckKeys.filter(key => key !== chosenDeckKey);
+            aiDeckKey = remainingDeckKeys[Math.floor(Math.random() * remainingDeckKeys.length)];
+        } else {
+             aiDeckKey = deckKeys[0]; // Fallback if only one deck exists
+        }
         
-        this.uiManager.elements.pileSelectionScreen.style.display = 'none';
+        ai.buildDeckFromList(aiDeckKey);
+        this.uiManager.logMessage(`A IA está usando o deck: ${aiDeckKey}.`);
+
+        // Split decks into piles for the swap phase
+        player.piles = this.splitDeck(player.deck);
+        ai.piles = this.splitDeck(ai.deck);
+
+        // Calculate charge for AI piles to show to the player
+        const aiPilesWithCharge = ai.piles.map(pile => ({
+            pile,
+            charge: this.calculatePileCharge(pile)
+        }));
+
+        // Show the swap screen
+        this.uiManager.showSwapScreen(aiPilesWithCharge, (pileIndex) => this.performSwap(pileIndex));
+    }
+
+    performSwap(aiPileIndex) {
+        const player = this.players[0];
+        const ai = this.players[1];
+        
+        this.uiManager.logMessage(`Jogador trocou uma pilha com a pilha de carga ${this.calculatePileCharge(ai.piles[aiPileIndex])} da IA.`);
+
+        // Swap the first player pile with the chosen AI pile
+        const playerPileToSwap = player.piles[0];
+        const aiPileToSwap = ai.piles[aiPileIndex];
+        
+        player.piles[0] = aiPileToSwap;
+        ai.piles[aiPileIndex] = playerPileToSwap;
+
+        // Reconstruct and shuffle the final decks
+        player.deck = shuffle(player.piles.flat());
+        ai.deck = shuffle(ai.piles.flat());
+        
+        // Clean up temporary piles
+        player.piles = [];
+        ai.piles = [];
+        
+        this.soundManager.play('start_game');
         this.uiManager.elements.gameContainer.style.display = 'grid';
         this.startGameLoop();
+    }
+
+    splitDeck(deck) {
+        const shuffled = shuffle([...deck]); // Work with a shuffled copy
+        const pileSize = Math.floor(shuffled.length / 3);
+        const pile1 = shuffled.slice(0, pileSize);
+        const pile2 = shuffled.slice(pileSize, pileSize * 2);
+        const pile3 = shuffled.slice(pileSize * 2);
+        return [pile1, pile2, pile3];
+    }
+
+    calculatePileCharge(pile) {
+        // Ensure card.charge is a number, default to 0 if not (for flexible cards not yet assigned)
+        return pile.reduce((acc, card) => acc + (Number(card.charge) || 0), 0);
     }
     
     startGameLoop() {
@@ -214,11 +260,8 @@ export class Game {
         const { charge, damage } = calculateCompoundStats(this.reactionCompound);
         this.uiManager.updateReactionUI(this.reactionCompound, charge, damage);
 
-        // Re-bind events for player hand after every update
         if (this.currentPlayerIndex === 0) {
-            // Create a handler function with context
             const handler = (index) => this.playCard(0, index);
-            // Attach a method to the handler to get card data
             handler.getCardData = (index) => this.players[0].hand[index];
             this.uiManager.bindPlayerCardEvents(handler);
         }
