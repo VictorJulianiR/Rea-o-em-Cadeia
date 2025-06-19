@@ -1,6 +1,7 @@
 export const CARD_DATABASE = {
     'H': {name: 'Hidrogênio', symbol: 'H⁺', z: 1, charge: 1, color: '#ff6b6b'},
     'Na': {name: 'Sódio', symbol: 'Na⁺', z: 11, charge: 1, color: '#feca57'},
+    'Li': {name: 'Lítio', symbol: 'Li⁺', z: 3, charge: 1, color: '#e06666'},
     'K': {name: 'Potássio', symbol: 'K⁺', z: 19, charge: 1, color: '#ff9ff3'},
     'Mg': {name: 'Magnésio', symbol: 'Mg²⁺', z: 12, charge: 2, color: '#54a0ff'},
     'Ca': {name: 'Cálcio', symbol: 'Ca²⁺', z: 20, charge: 2, color: '#5f27cd'},
@@ -44,13 +45,13 @@ export const UIElements = {
 
 export const SOUND_CONFIG = {
     bg_music:      { src: 'assets/sounds/bg_music.mp3', loop: true, volume: 0.3 },
-    start_game:    { src: 'assets/sounds/start_game.wav', volume: 0.7 },
+    start_game:    { src: 'assets/sounds/start_game.mp3', volume: 0.7 },
     ui_click:      { src: 'assets/sounds/ui_click.wav', volume: 0.8 },
-    card_hover:    { src: 'assets/sounds/card_hover.wav', volume: 0.5 },
+    card_hover:    { src: 'assets/sounds/card_hover.mp3', volume: 0.5 },
     card_play:     { src: 'assets/sounds/card_play.wav', volume: 0.7 },
-    explosion:     { src: 'assets/sounds/explosion.wav', volume: 1.0 },
+    explosion:     { src: 'assets/sounds/explosion.mp3', volume: 1.0 },
     success:       { src: 'assets/sounds/success.wav', volume: 0.8 },
     turn_switch:   { src: 'assets/sounds/turn_switch.wav', volume: 0.6 },
     win:           { src: 'assets/sounds/win.mp3', volume: 0.9 },
-    lose:          { src: 'assets/sounds/lose.mp3', volume: 0.9 },
+    lose:          { src: 'assets/sounds/lose.wav', volume: 0.9 },
 };

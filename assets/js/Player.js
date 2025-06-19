@@ -17,7 +17,7 @@ export class Player {
     }
 
     createDeck() {
-        const cardPool = ['H', 'H', 'Na', 'K', 'Mg', 'Ca', 'Fe2', 'F', 'F', 'Cl', 'Cl', 'O', 'O', 'S', 'C', 'Al', 'N', 'P', 'P', 'E', 'E', 'Nn', 'Nn'];
+        const cardPool = ['H', 'H', 'Li', 'Na', 'K', 'Mg', 'Ca', 'Fe2', 'F', 'F', 'Cl', 'Cl', 'O', 'O', 'S', 'C', 'Al', 'N', 'P', 'P', 'E', 'E', 'Nn', 'Nn'];
         const newDeck = [];
         for (let i = 0; i < DECK_SIZE; i++) {
             const cardKey = cardPool[i % cardPool.length];
